@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id  Int      @id @default(autoincrement())
+  email    String   @unique
+  password String
+  clients  Client[] @relation("UserClients")
+  loans    Loan[]
+}
+
+model Client {
+  client_id   Int       @id @default(autoincrement())
+  first_name  String
+  last_name   String
+  middle_name String?
+  user_id     Int
+  user        User      @relation("UserClients", fields: [user_id], references: [user_id], onDelete: Cascade)
+  loans       Loan[]
+  payments    Payment[]
+}
+
+model Loan {
+  loan_id    Int       @id @default(autoincrement())
+  amount     Int
+  balance    Int
+  purpose    String?
+  created_at DateTime  @default(now())
+  closed_at  DateTime?
+  status     Int       @default(1)
+  user_id    Int
+  client_id  Int
+  client     Client    @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  user       User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  payments   Payment[]
+}
+
+model Payment {
+  payment_id Int      @id @default(autoincrement())
+  amount     Int
+  remarks    String?
+  created_at DateTime @default(now())
+  loan_id    Int
+  client_id  Int
+  client     Client   @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
+  loan       Loan     @relation(fields: [loan_id], references: [loan_id], onDelete: Cascade)
+}
