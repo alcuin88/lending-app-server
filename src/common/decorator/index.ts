@@ -1,1 +1,1 @@
-export * from './dashboard-decorator';
+export * from './user.decorator';
