@@ -60,7 +60,7 @@ export class AuthService {
   async signToken(
     userId: number,
     email: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ access_token: string; expires_in: string }> {
     const payload = { sub: userId, email };
     const secret = this.config.get('JWT_SECRET') as string;
     return {
@@ -68,6 +68,7 @@ export class AuthService {
         expiresIn: '1d',
         secret: secret,
       }),
+      expires_in: '1d',
     };
   }
 }
