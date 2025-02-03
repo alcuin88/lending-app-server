@@ -24,4 +24,16 @@ export class LoanService {
       throw new Error('Failed to fetch records.');
     }
   }
+
+  async getLoan(loan_id: number) {
+    try {
+      return await this.prisma.loan.findFirst({
+        where: {
+          loan_id,
+        },
+      });
+    } catch {
+      throw new Error(`Failed to fetch loan with loan_id: ${loan_id}`);
+    }
+  }
 }

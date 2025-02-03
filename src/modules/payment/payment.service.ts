@@ -20,8 +20,7 @@ export class PaymentService {
       payment_id: 0,
       created_at: dto.created_at,
     };
-    console.log('payment');
-    console.log(payment);
+
     await this.postPayment(payment);
   }
 
@@ -33,7 +32,6 @@ export class PaymentService {
       payment_id: 0,
     };
 
-    console.log('General payment');
     for (const loan of loans) {
       if (remainingAmount > loan.balance) {
         newPayment = {
@@ -51,7 +49,6 @@ export class PaymentService {
 
       remainingAmount = remainingAmount - loan.balance;
 
-      console.log(newPayment);
       await this.postPayment(newPayment);
 
       if (remainingAmount <= 0) {
@@ -90,6 +87,18 @@ export class PaymentService {
       );
     } catch {
       throw new Error('Failed to fetch loan records.');
+    }
+  }
+
+  async getPaymentsByLoanID(loan_id: number) {
+    try {
+      return await this.primsa.payment.findMany({
+        where: {
+          loan_id: loan_id,
+        },
+      });
+    } catch {
+      throw new Error(`Failed to fetch payment with loan_id: ${loan_id}`);
     }
   }
 }

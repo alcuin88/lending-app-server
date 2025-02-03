@@ -34,6 +34,18 @@ export class ClientService {
     }
   }
 
+  async getClientByID(client_id: number) {
+    try {
+      return await this.prisma.client.findFirst({
+        where: {
+          client_id: client_id,
+        },
+      });
+    } catch {
+      throw new Error(`Failed to fetch client with client_id: ${client_id}`);
+    }
+  }
+
   async createClient(dto: ClientDto, userId: number) {
     try {
       return await this.prisma.client.create({

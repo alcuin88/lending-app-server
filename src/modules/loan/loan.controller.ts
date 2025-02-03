@@ -6,7 +6,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { LoanDto } from './dto';
+import { LoanDto, LoanIDDto } from './dto';
 import { LoanService } from './loan.service';
 import { UserDecorator } from 'src/common/decorator';
 import { User } from '@prisma/client';
@@ -21,5 +21,11 @@ export class LoanController {
   @Post('new')
   async newLoan(@Body() dto: LoanDto, @UserDecorator() user: User) {
     return this.loanService.addLoan(dto, user.user_id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('id')
+  async getLoan(@Body() loanIDDto: LoanIDDto) {
+    return this.loanService.getLoan(loanIDDto.loan_id);
   }
 }
