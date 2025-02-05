@@ -8,9 +8,8 @@ import {
 } from '@nestjs/common';
 import { LoanDto, LoanIDDto } from './dto';
 import { LoanService } from './loan.service';
-import { UserDecorator } from 'src/common/decorator';
 import { User } from '@prisma/client';
-import { JwtGuard } from 'src/common/guard';
+import { JwtGuard, UserDecorator } from '../../common';
 
 @UseGuards(JwtGuard)
 @Controller('loan')

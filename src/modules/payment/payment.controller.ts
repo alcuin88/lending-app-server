@@ -6,12 +6,11 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { JwtGuard } from 'src/common/guard';
 import { PaymentService } from './payment.service';
 import { PaymentDto } from './dto';
-import { UserDecorator } from 'src/common/decorator';
 import { User } from '@prisma/client';
 import { LoanIDDto } from '../loan/dto';
+import { JwtGuard, UserDecorator } from '../../common';
 
 @UseGuards(JwtGuard)
 @Controller('payment')

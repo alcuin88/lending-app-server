@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma/prisma.service';
 import { ClientDto } from './dto';
+import { PrismaService } from '../../prisma';
 
 @Injectable()
 export class ClientService {
@@ -9,13 +9,14 @@ export class ClientService {
 
   async getAllClients(userId: number) {
     try {
-      return await this.prisma.client.findMany({
+      const response = await this.prisma.client.findMany({
         where: { user_id: userId },
         include: {
           loans: true,
           payments: true,
         },
       });
+      return response;
     } catch {
       throw new Error('Failed to fetch records.');
     }
@@ -23,12 +24,14 @@ export class ClientService {
 
   async getClientByName(dto: ClientDto) {
     try {
-      return await this.prisma.client.findFirst({
+      const response = await this.prisma.client.findFirst({
         where: {
           first_name: dto.first_name,
           last_name: dto.last_name,
         },
       });
+
+      return response;
     } catch {
       throw new Error('Failed to fetch records.');
     }
@@ -36,11 +39,13 @@ export class ClientService {
 
   async getClientByID(client_id: number) {
     try {
-      return await this.prisma.client.findFirst({
+      const response = await this.prisma.client.findFirst({
         where: {
           client_id: client_id,
         },
       });
+
+      return response;
     } catch {
       throw new Error(`Failed to fetch client with client_id: ${client_id}`);
     }
