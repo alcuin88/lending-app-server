@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma';
 
 @Injectable()
 export class PaymentService {
-  constructor(private primsa: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
   async payment(dto: PaymentDto, userId: number) {
     if (dto.loan_id === 0) {
@@ -59,23 +59,65 @@ export class PaymentService {
 
   async postPayment(payment: Payment) {
     try {
-      await this.primsa.payment.create({
-        data: {
-          amount: payment.amount,
-          remarks: payment.remarks,
-          client_id: payment.client_id,
-          loan_id: payment.loan_id,
-          created_at: payment.created_at,
-        },
+      await this.prisma.$transaction(async (prisma) => {
+        await prisma.payment.create({
+          data: {
+            amount: payment.amount,
+            remarks: payment.remarks,
+            client_id: payment.client_id,
+            loan_id: payment.loan_id,
+            created_at: payment.created_at,
+          },
+        });
+
+        const loan = await this.getLoan(payment.loan_id);
+        if (!loan) {
+          throw new Error('Loan not found');
+        }
+        const newBalance = loan.balance - payment.amount;
+
+        if (newBalance < 0) {
+          throw new Error('Over payment');
+        }
+        const newStatus = newBalance === 0 ? 'Paid' : 'Active';
+        await this.updateLoan(loan.loan_id, newBalance, newStatus);
       });
     } catch {
       throw new Error('Error posting payment.');
     }
   }
 
+  async updateLoan(loan_id: number, newBalance: number, newStatus: string) {
+    try {
+      await this.prisma.loan.update({
+        where: {
+          loan_id: loan_id,
+        },
+        data: {
+          balance: newBalance,
+          status: newStatus,
+        },
+      });
+    } catch {
+      throw new Error('Error updating loan.');
+    }
+  }
+
+  async getLoan(loan_id: number) {
+    try {
+      return await this.prisma.loan.findUnique({
+        where: {
+          loan_id: loan_id,
+        },
+      });
+    } catch {
+      throw new Error('Error fetching loan.');
+    }
+  }
+
   async getLoans(clientId: number, userId: number) {
     try {
-      const loans = await this.primsa.loan.findMany({
+      const loans = await this.prisma.loan.findMany({
         where: {
           user_id: userId,
           client_id: clientId,
@@ -92,7 +134,7 @@ export class PaymentService {
 
   async getPaymentsByLoanID(loan_id: number) {
     try {
-      return await this.primsa.payment.findMany({
+      return await this.prisma.payment.findMany({
         where: {
           loan_id: loan_id,
         },

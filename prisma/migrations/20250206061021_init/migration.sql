@@ -12,7 +12,6 @@ CREATE TABLE "Client" (
     "client_id" SERIAL NOT NULL,
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
-    "middle_name" TEXT,
 
     CONSTRAINT "Client_pkey" PRIMARY KEY ("client_id")
 );
@@ -25,7 +24,7 @@ CREATE TABLE "Loan" (
     "purpose" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "closed_at" TIMESTAMP(3),
-    "status" INTEGER NOT NULL DEFAULT 1,
+    "status" TEXT NOT NULL DEFAULT 'Active',
     "user_id" INTEGER NOT NULL,
     "client_id" INTEGER NOT NULL,
 

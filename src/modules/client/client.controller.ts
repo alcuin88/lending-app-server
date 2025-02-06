@@ -20,7 +20,6 @@ export class ClientController {
   @HttpCode(HttpStatus.OK)
   @Get('all')
   getAllClients(@UserDecorator() user: User) {
-    console.log(user);
     return this.clientService.getAllClients(user.user_id);
   }
 
@@ -33,7 +32,6 @@ export class ClientController {
   @HttpCode(HttpStatus.CREATED)
   @Post('create')
   createClient(@Body() dto: ClientDto, @UserDecorator() user: User) {
-    console.log(user);
     return this.clientService.clientCreateUpdate(dto, user.user_id);
   }
 

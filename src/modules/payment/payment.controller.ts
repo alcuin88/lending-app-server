@@ -17,7 +17,7 @@ import { JwtGuard, UserDecorator } from '../../common';
 export class PaymentController {
   constructor(private service: PaymentService) {}
 
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @Post('new')
   async createPayment(@Body() dto: PaymentDto, @UserDecorator() user: User) {
     return this.service.payment(dto, user.user_id);
