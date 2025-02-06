@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentDto } from './dto';
-import { Payment } from '@prisma/client';
+import { Loan, Payment } from '@prisma/client';
 import { PrismaService } from '../../prisma';
 
 @Injectable()
@@ -74,28 +74,30 @@ export class PaymentService {
         if (!loan) {
           throw new Error('Loan not found');
         }
-        const newBalance = loan.balance - payment.amount;
+        loan.balance = loan.balance - payment.amount;
 
-        if (newBalance < 0) {
+        if (loan.balance < 0) {
           throw new Error('Over payment');
         }
-        const newStatus = newBalance === 0 ? 'Paid' : 'Active';
-        await this.updateLoan(loan.loan_id, newBalance, newStatus);
+        loan.status = loan.balance === 0 ? 'Paid' : 'Active';
+        loan.closed_at = loan.balance === 0 ? payment.created_at : null;
+        await this.updateLoan(loan);
       });
     } catch {
       throw new Error('Error posting payment.');
     }
   }
 
-  async updateLoan(loan_id: number, newBalance: number, newStatus: string) {
+  async updateLoan(loan: Loan) {
     try {
       await this.prisma.loan.update({
         where: {
-          loan_id: loan_id,
+          loan_id: loan.loan_id,
         },
         data: {
-          balance: newBalance,
-          status: newStatus,
+          balance: loan.balance,
+          status: loan.status,
+          closed_at: loan.closed_at,
         },
       });
     } catch {
