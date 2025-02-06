@@ -19,9 +19,7 @@ model Client {
   client_id   Int       @id @default(autoincrement())
   first_name  String
   last_name   String
-  middle_name String?
-  user_id     Int
-  user        User      @relation("UserClients", fields: [user_id], references: [user_id], onDelete: Cascade)
+  user        User[]      @relation("UserClients")
   loans       Loan[]
   payments    Payment[]
 }

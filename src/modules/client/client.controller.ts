@@ -26,15 +26,15 @@ export class ClientController {
 
   @HttpCode(HttpStatus.OK)
   @Post()
-  getClientByName(@Body() dto: ClientDto) {
-    return this.clientService.getClientByName(dto);
+  getClientByName(@Body() dto: ClientDto, @UserDecorator() user: User) {
+    return this.clientService.getClientByNameUnderUser(dto, user.user_id);
   }
 
   @HttpCode(HttpStatus.CREATED)
   @Post('create')
   createClient(@Body() dto: ClientDto, @UserDecorator() user: User) {
     console.log(user);
-    return this.clientService.createClient(dto, user.user_id);
+    return this.clientService.clientCreateUpdate(dto, user.user_id);
   }
 
   @HttpCode(HttpStatus.OK)
