@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from '../src/prisma';
 import { AuthDto } from 'src/modules/auth/dto';
+import { ResetPasswordDto } from 'src/modules/user/dto';
 
 void describe('App e2e', () => {
   let app: INestApplication;
@@ -116,7 +117,31 @@ void describe('App e2e', () => {
       });
     });
     void describe('Reset password', () => {
-      it.todo('Should reset user password');
+      const dto: ResetPasswordDto = {
+        password: 'testtest123!',
+      };
+      it('Should throw if unauthorized', () => {
+        return pactum.spec().patch('/users').withBody(dto).expectStatus(401);
+      });
+      it('Should throw if no body provided', () => {
+        return pactum
+          .spec()
+          .patch('/users')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(400);
+      });
+      it('Should reset user password', () => {
+        return pactum
+          .spec()
+          .patch('/users')
+          .withBody(dto)
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200);
+      });
     });
   });
 

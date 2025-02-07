@@ -24,10 +24,7 @@ export class UserController {
   }
 
   @Patch()
-  eidtUser(
-    @UserDecorator('user_id') userId: number,
-    @Body() dto: ResetPasswordDto,
-  ) {
-    return this.userService.resetPassword(userId, dto);
+  resetPassword(@UserDecorator() user: User, @Body() dto: ResetPasswordDto) {
+    return this.userService.resetPassword(user.user_id, dto);
   }
 }

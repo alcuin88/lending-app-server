@@ -9,6 +9,7 @@ export class UserService {
 
   async resetPassword(userId: number, dto: ResetPasswordDto) {
     const password = await argon.hash(dto.password);
+    console.log(`ALCUIN ID: ${userId}`);
     try {
       await this.prisma.user.update({
         where: {
