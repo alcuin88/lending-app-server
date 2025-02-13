@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ClientDto } from './dto';
 import { PrismaService } from '../../prisma';
+import { Client, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ClientService {
@@ -48,36 +49,35 @@ export class ClientService {
     }
   }
 
-  async getClientByID(client_id: number) {
+  async getClientByID(
+    clientWhereUniqueInput: Prisma.ClientWhereUniqueInput,
+  ): Promise<Client | null> {
     try {
-      const response = await this.prisma.client.findFirst({
-        where: {
-          client_id: client_id,
-        },
+      const response = await this.prisma.client.findUnique({
+        where: clientWhereUniqueInput,
       });
 
       return response;
     } catch {
-      throw new Error(`Failed to fetch client with client_id: ${client_id}`);
+      throw new Error(
+        `Failed to fetch client with client_id: ${clientWhereUniqueInput.client_id}`,
+      );
     }
   }
 
-  async clientCreateUpdate(dto: ClientDto, user_id: number) {
-    const client = await this.isClientExist(dto);
+  async updateClient(dto: ClientDto, user_id: number) {
+    const client = await this.isClientExist(Number(dto.client_id));
     if (client === null) {
-      return await this.createClient(dto, user_id);
-    } else {
-      return await this.updateClient(client.client_id, user_id);
+      throw new NotFoundException('Client not found.');
     }
-  }
-
-  async updateClient(client_id: number, user_id: number) {
     try {
       return await this.prisma.client.update({
         where: {
-          client_id: client_id,
+          client_id: dto.client_id,
         },
         data: {
+          first_name: dto.first_name,
+          last_name: dto.last_name,
           user: {
             connect: {
               user_id: user_id,
@@ -91,6 +91,10 @@ export class ClientService {
   }
 
   async createClient(dto: ClientDto, user_id: number) {
+    const client = await this.getClientIdByName(dto);
+    if (client !== null) {
+      return await this.updateClient(dto, user_id);
+    }
     try {
       return await this.prisma.client.create({
         data: {
@@ -111,7 +115,7 @@ export class ClientService {
     }
   }
 
-  async isClientExist(dto: ClientDto) {
+  async getClientIdByName(dto: ClientDto) {
     try {
       return await this.prisma.client.findFirst({
         where: {
@@ -120,6 +124,18 @@ export class ClientService {
         },
         select: {
           client_id: true,
+        },
+      });
+    } catch {
+      throw new Error('Failed to fetch client.');
+    }
+  }
+
+  async isClientExist(client_id: number) {
+    try {
+      return await this.prisma.client.findFirst({
+        where: {
+          client_id: client_id,
         },
       });
     } catch {

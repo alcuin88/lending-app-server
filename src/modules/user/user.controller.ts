@@ -20,7 +20,7 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @Get('me')
   getUser(@UserDecorator() user: User) {
-    return user;
+    return this.userService.user(user);
   }
 
   @Patch()

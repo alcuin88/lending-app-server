@@ -6,6 +6,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { PrismaService } from '../src/prisma';
 import { AuthDto } from 'src/modules/auth/dto';
 import { ResetPasswordDto } from 'src/modules/user/dto';
+import { Client } from '@prisma/client';
 
 void describe('App e2e', () => {
   let app: INestApplication;
@@ -67,6 +68,13 @@ void describe('App e2e', () => {
           .withBody(dto)
           .expectStatus(201);
       });
+      it('Should throw if email alreay taken', () => {
+        return pactum
+          .spec()
+          .post('/auth/signup')
+          .withBody(dto)
+          .expectStatus(403);
+      });
     });
     void describe('Login', () => {
       it('Should throw if email is empty', () => {
@@ -110,9 +118,7 @@ void describe('App e2e', () => {
         return pactum
           .spec()
           .get('/users/me')
-          .withHeaders({
-            Authorization: 'Bearer $S{userAt}',
-          })
+          .withBearerToken(`$S{userAt}`)
           .expectStatus(200);
       });
     });
@@ -146,20 +152,123 @@ void describe('App e2e', () => {
   });
 
   void describe('Client', () => {
+    const client: Client = {
+      client_id: 0,
+      first_name: 'Test',
+      last_name: 'Client',
+    };
     void describe('Create client', () => {
-      it.todo('Should create client');
+      it('Should throw if unauthorized', () => {
+        return pactum
+          .spec()
+          .post('/client/create')
+          .withBody(client)
+          .expectStatus(401)
+          .stores('client_id', 'client_id');
+      });
+      it('Should throw if no body provided', () => {
+        return pactum
+          .spec()
+          .post('/client/create')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .withBody({})
+          .expectStatus(400)
+          .stores('client_id', 'client_id');
+      });
+      it('Should create client', () => {
+        return pactum
+          .spec()
+          .post('/client/create')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .withBody(client)
+          .expectStatus(201)
+          .stores('client_id', 'client_id');
+      });
     });
     void describe('Get clients', () => {
-      it.todo('Should get client');
+      it('Should throw if not authorized', () => {
+        return pactum.spec().get('/client/all').expectStatus(401);
+      });
+      it('Should get client', () => {
+        return pactum
+          .spec()
+          .get('/client/all')
+          .withBearerToken('$S{userAt}')
+          .expectStatus(200);
+      });
     });
     void describe('Get client by id', () => {
-      it.todo('Should get client by id');
+      it('Should throw if no id in params', () => {
+        return pactum
+          .spec()
+          .post('/client')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(400);
+      });
+      it('Should throw if no id found', () => {
+        return pactum
+          .spec()
+          .post('/client/222')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(404);
+      });
+      it('Should get client by id', () => {
+        return pactum
+          .spec()
+          .get('/client/$S{client_id}')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200);
+      });
     });
     void describe('Get client by name', () => {
-      it.todo('Should get client by name');
+      it('Should throw if not authorized', () => {
+        return pactum.spec().post('/client').withBody(client).expectStatus(401);
+      });
+      it('Should get client by name', () => {
+        return pactum
+          .spec()
+          .post('/client')
+          .withBearerToken('$S{userAt}')
+          .withBody(client)
+          .expectStatus(200);
+      });
     });
     void describe('Update client', () => {
-      it.todo('Should update client');
+      it('Should throw if no client found', () => {
+        return pactum
+          .spec()
+          .patch('/client')
+          .withBearerToken('$S{userAt}')
+          .withBody({
+            client_id: 1212,
+            first_name: 'Test',
+            last_name: 'Update',
+          })
+          .expectStatus(404);
+      });
+
+      it('Should update client', () => {
+        return pactum
+          .spec()
+          .patch('/client')
+          .withBearerToken('$S{userAt}')
+          .withBody({
+            client_id: '$S{client_id}',
+            first_name: 'Test',
+            last_name: 'Update',
+          })
+          .expectStatus(200);
+      });
     });
   });
 

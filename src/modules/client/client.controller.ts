@@ -4,12 +4,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { ClientService } from './client.service';
 import { User } from '@prisma/client';
-import { ClientDto, ClientIDDto } from './dto';
+import { ClientDto } from './dto';
 import { JwtGuard, UserDecorator } from '../../common';
 
 @UseGuards(JwtGuard)
@@ -32,12 +34,17 @@ export class ClientController {
   @HttpCode(HttpStatus.CREATED)
   @Post('create')
   createClient(@Body() dto: ClientDto, @UserDecorator() user: User) {
-    return this.clientService.clientCreateUpdate(dto, user.user_id);
+    return this.clientService.createClient(dto, user.user_id);
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('id')
-  getClientByID(@Body() clientIDDto: ClientIDDto) {
-    return this.clientService.getClientByID(clientIDDto.client_id);
+  @Get('/:id')
+  getClientByID(@Param('id') client_id: string) {
+    return this.clientService.getClientByID({ client_id: Number(client_id) });
+  }
+
+  @Patch()
+  updateClient(@Body() dto: ClientDto, @UserDecorator() user: User) {
+    return this.clientService.updateClient(dto, user.user_id);
   }
 }
