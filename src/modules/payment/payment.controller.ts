@@ -20,7 +20,7 @@ export class PaymentController {
   @HttpCode(HttpStatus.CREATED)
   @Post('new')
   async createPayment(@Body() dto: PaymentDto, @UserDecorator() user: User) {
-    return this.service.payment(dto, user.user_id);
+    return await this.service.payment(dto, user.user_id);
   }
 
   @HttpCode(HttpStatus.OK)

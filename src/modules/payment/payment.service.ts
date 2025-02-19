@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PaymentDto } from './dto';
 import { Loan, Payment } from '@prisma/client';
 import { PrismaService } from '../../prisma';
@@ -21,7 +26,21 @@ export class PaymentService {
       created_at: dto.created_at,
     };
 
-    await this.postPayment(payment);
+    const loan = (await this.getLoan(payment.loan_id)) as Loan;
+
+    if (!loan) {
+      throw new NotFoundException('Loan not found');
+    }
+
+    if (loan.status !== 'Active') {
+      throw new BadRequestException('Loan already paid.');
+    }
+
+    if (loan.balance < payment.amount) {
+      throw new BadRequestException('Over payment is not allowed.');
+    }
+
+    await this.postPayment(payment, loan);
   }
 
   async generalPayment(dto: PaymentDto, userId: number) {
@@ -31,6 +50,10 @@ export class PaymentService {
       ...dto,
       payment_id: 0,
     };
+
+    if (this.isOverPayment(loans, dto.amount)) {
+      throw new BadRequestException('Over payment is not allowed.');
+    }
 
     for (const loan of loans) {
       if (remainingAmount > loan.balance) {
@@ -49,7 +72,7 @@ export class PaymentService {
 
       remainingAmount = remainingAmount - loan.balance;
 
-      await this.postPayment(newPayment);
+      await this.postPayment(newPayment, loan);
 
       if (remainingAmount <= 0) {
         break;
@@ -57,7 +80,7 @@ export class PaymentService {
     }
   }
 
-  async postPayment(payment: Payment) {
+  async postPayment(payment: Payment, loan: Loan) {
     try {
       await this.prisma.$transaction(async (prisma) => {
         await prisma.payment.create({
@@ -70,22 +93,33 @@ export class PaymentService {
           },
         });
 
-        const loan = await this.getLoan(payment.loan_id);
-        if (!loan) {
-          throw new Error('Loan not found');
-        }
+        //
+
         loan.balance = loan.balance - payment.amount;
 
-        if (loan.balance < 0) {
-          throw new Error('Over payment');
-        }
         loan.status = loan.balance === 0 ? 'Paid' : 'Active';
         loan.closed_at = loan.balance === 0 ? payment.created_at : null;
         await this.updateLoan(loan);
+        return { message: 'Payment posted successfully' };
       });
-    } catch {
-      throw new Error('Error posting payment.');
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error posting payment.');
     }
+  }
+
+  isOverPayment(loans: Loan[], paymentAmount: number) {
+    const amount = loans.reduce(
+      (totalLoanAmount, loan) => totalLoanAmount + loan.balance,
+      0,
+    );
+
+    return amount < paymentAmount;
   }
 
   async updateLoan(loan: Loan) {

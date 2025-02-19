@@ -12,7 +12,7 @@ export class ClientDto {
   @IsNotEmpty()
   last_name: string;
 
-  constructor(first_name: string, last_name: string, client_id: number) {
+  constructor(first_name: string, last_name: string, client_id: number = 0) {
     this.first_name = first_name;
     this.last_name = last_name;
     this.client_id = client_id;

@@ -54,14 +54,13 @@ export class AuthService {
     if (!pwMatch) {
       throw new ForbiddenException('Credentials incorrect');
     }
-
-    return this.signToken(user.user_id, user.email);
+    return await this.signToken(user.user_id, user.email);
   }
 
   async signToken(
     userId: number,
     email: string,
-  ): Promise<{ access_token: string; expires_in: string }> {
+  ): Promise<{ access_token: string; expires_in: string; email: string }> {
     const payload = { sub: userId, email };
     const secret = this.config.get('JWT_SECRET') as string;
     return {
@@ -70,6 +69,7 @@ export class AuthService {
         secret: secret,
       }),
       expires_in: '1d',
+      email,
     };
   }
 }
