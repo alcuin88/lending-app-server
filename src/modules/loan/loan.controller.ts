@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { LoanDto, LoanIDDto } from './dto';
+import { LoanDto } from './dto';
 import { LoanService } from './loan.service';
 import { User } from '@prisma/client';
 import { JwtGuard, UserDecorator } from '../../common';
@@ -23,8 +25,8 @@ export class LoanController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('id')
-  async getLoan(@Body() loanIDDto: LoanIDDto) {
-    return this.loanService.getLoan(loanIDDto.loan_id);
+  @Get('/:id')
+  async getLoan(@Param('id') loan_id: string) {
+    return this.loanService.getLoan(Number(loan_id));
   }
 }

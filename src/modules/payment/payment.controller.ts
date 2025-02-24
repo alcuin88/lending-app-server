@@ -1,15 +1,16 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { PaymentDto } from './dto';
 import { User } from '@prisma/client';
-import { LoanIDDto } from '../loan/dto';
 import { JwtGuard, UserDecorator } from '../../common';
 
 @UseGuards(JwtGuard)
@@ -24,8 +25,8 @@ export class PaymentController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('id')
-  async getPaymentByID(@Body() loanIDDto: LoanIDDto) {
-    return this.service.getPaymentsByLoanID(loanIDDto.loan_id);
+  @Get('/:id')
+  async getPaymentByID(@Param('id') loan_id: string) {
+    return this.service.getPaymentsByLoanID(Number(loan_id));
   }
 }
