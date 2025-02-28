@@ -36,4 +36,21 @@ export class LoanService {
       throw new Error(`Failed to fetch loan with loan_id: ${loan_id}`);
     }
   }
+
+  async deleteLoan(loan_id: number) {
+    try {
+      return await this.prisma.$transaction([
+        this.prisma.loan.update({
+          where: { loan_id },
+          data: { status: 'Deleted', closed_at: new Date() },
+        }),
+        this.prisma.payment.updateMany({
+          where: { loan_id },
+          data: { status: 'Deleted' },
+        }),
+      ]);
+    } catch {
+      throw new Error(`Failed to update loan with loan_id ${loan_id}`);
+    }
+  }
 }
