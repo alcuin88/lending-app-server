@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -27,6 +28,13 @@ export class LoanController {
   @HttpCode(HttpStatus.OK)
   @Get('/:id')
   async getLoan(@Param('id') loan_id: string) {
+    console.log('/loan/:id');
     return this.loanService.getLoan(Number(loan_id));
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Patch('delete/:id')
+  deleteLoan(@Param('id') loan_id: string) {
+    return this.loanService.deleteLoan(Number(loan_id));
   }
 }

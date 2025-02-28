@@ -11,17 +11,17 @@ model User {
   user_id  Int      @id @default(autoincrement())
   email    String   @unique
   password String
-  clients  Client[] @relation("UserClients")
   loans    Loan[]
+  clients  Client[] @relation("UserClients")
 }
 
 model Client {
-  client_id   Int       @id @default(autoincrement())
-  first_name  String
-  last_name   String
-  user        User[]      @relation("UserClients")
-  loans       Loan[]
-  payments    Payment[]
+  client_id  Int       @id @default(autoincrement())
+  first_name String
+  last_name  String
+  loans      Loan[]
+  payments   Payment[]
+  user       User[]    @relation("UserClients")
 }
 
 model Loan {
@@ -46,6 +46,7 @@ model Payment {
   created_at DateTime @default(now())
   loan_id    Int
   client_id  Int
+  status     String   @default("Active")
   client     Client   @relation(fields: [client_id], references: [client_id], onDelete: Cascade)
   loan       Loan     @relation(fields: [loan_id], references: [loan_id], onDelete: Cascade)
 }
