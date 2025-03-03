@@ -22,12 +22,14 @@ export class ClientController {
   @HttpCode(HttpStatus.OK)
   @Get('all')
   getAllClients(@UserDecorator() user: User) {
+    console.log('/client/all');
     return this.clientService.getAllClients(user.user_id);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post()
   getClientByName(@Body() dto: ClientDto, @UserDecorator() user: User) {
+    console.log('/client');
     return this.clientService.getClientByNameUnderUser(dto, user.user_id);
   }
 
@@ -40,6 +42,7 @@ export class ClientController {
   @HttpCode(HttpStatus.OK)
   @Get('/:id')
   getClientByID(@Param('id') client_id: string) {
+    console.log('/client/:id');
     return this.clientService.getClientByID({ client_id: Number(client_id) });
   }
 

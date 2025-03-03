@@ -1,7 +1,8 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PaymentDto } from './dto';
@@ -24,6 +25,7 @@ export class PaymentService {
       client_id: dto.client_id,
       payment_id: 0,
       created_at: dto.created_at,
+      status: 'Active',
     };
 
     const loan = (await this.getLoan(payment.loan_id)) as Loan;
@@ -40,7 +42,9 @@ export class PaymentService {
       throw new BadRequestException('Over payment is not allowed.');
     }
 
-    await this.postPayment(payment, loan);
+    const res = await this.postPayment(payment, loan);
+    console.log(res);
+    return res;
   }
 
   async generalPayment(dto: PaymentDto, userId: number) {
@@ -49,40 +53,40 @@ export class PaymentService {
     let newPayment: Payment = {
       ...dto,
       payment_id: 0,
+      status: 'Active',
     };
 
     if (this.isOverPayment(loans, dto.amount)) {
       throw new BadRequestException('Over payment is not allowed.');
     }
 
+    const processedPayments = [];
+
     for (const loan of loans) {
-      if (remainingAmount > loan.balance) {
-        newPayment = {
-          ...newPayment,
-          loan_id: loan.loan_id,
-          amount: loan.balance,
-        };
-      } else {
-        newPayment = {
-          ...newPayment,
-          loan_id: loan.loan_id,
-          amount: remainingAmount,
-        };
-      }
+      if (remainingAmount <= 0) break; // Stop processing if no money left
 
-      remainingAmount = remainingAmount - loan.balance;
+      const paymentAmount = Math.min(remainingAmount, loan.balance);
 
-      await this.postPayment(newPayment, loan);
+      newPayment = {
+        ...newPayment,
+        loan_id: loan.loan_id,
+        amount: paymentAmount, // Use the correct amount
+      };
 
-      if (remainingAmount <= 0) {
-        break;
-      }
+      remainingAmount -= paymentAmount; // Subtract the actual paid amount
+
+      const paymentResponse = await this.postPayment(newPayment, loan);
+      processedPayments.push(paymentResponse);
     }
+
+    return {
+      message: 'Payment posted successfully',
+    };
   }
 
   async postPayment(payment: Payment, loan: Loan) {
     try {
-      await this.prisma.$transaction(async (prisma) => {
+      const result = await this.prisma.$transaction(async (prisma) => {
         await prisma.payment.create({
           data: {
             amount: payment.amount,
@@ -93,8 +97,6 @@ export class PaymentService {
           },
         });
 
-        //
-
         loan.balance = loan.balance - payment.amount;
 
         loan.status = loan.balance === 0 ? 'Paid' : 'Active';
@@ -102,6 +104,7 @@ export class PaymentService {
         await this.updateLoan(loan);
         return { message: 'Payment posted successfully' };
       });
+      return result;
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -109,7 +112,10 @@ export class PaymentService {
       ) {
         throw error;
       }
-      throw new InternalServerErrorException('Error posting payment.');
+      throw new HttpException(
+        { message: 'Failed to create payment' },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

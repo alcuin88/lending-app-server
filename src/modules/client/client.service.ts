@@ -42,8 +42,7 @@ export class ClientService {
           },
         },
       });
-
-      return response;
+      return response ?? {};
     } catch {
       throw new Error('Failed to fetch records.');
     }

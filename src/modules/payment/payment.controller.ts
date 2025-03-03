@@ -27,6 +27,7 @@ export class PaymentController {
   @HttpCode(HttpStatus.OK)
   @Get('/:id')
   async getPaymentByID(@Param('id') loan_id: string) {
+    console.log('/payment/:id');
     return this.service.getPaymentsByLoanID(Number(loan_id));
   }
 }
